@@ -1,6 +1,6 @@
 // import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { getServerAuthSession } from "@/auth";
+import { getSession, getUserDetails } from "@/lib/supabase/server";
 import Navbar from "@/components/Nav/Navbar";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "@/styles/globals.css";
@@ -53,52 +53,38 @@ const getSeverData = async (email: string) => {
 
 export default async function RootLayout({
     children,
-    params: { locale },
-}: Readonly<{
+    params,
+}: {
     children: React.ReactNode;
     params: { locale: string };
-}>) {
+}) {
     let data: any = {};
 
-    const session = await getServerAuthSession();
+    const session = await getSession();
+    const user = session ? await getUserDetails() : null;
+
     if (session && session.user) {
         data = await getSeverData(session?.user?.email || "");
     }
-    const user = session
-        ? {
-              ...session.user,
-              ...data.userInfo,
-          }
-        : null;
 
-    console.info(session);
-    // const session = {
-    //   user: null
-    // };
-    // const user = null
-
-    // Providing all messages to the client
-    // side is the easiest way to get started
     const messages = await getMessages();
 
     return (
-        <html lang={locale} className="dark" suppressHydrationWarning>
-            {/* <Head> */}
-            {/* </Head> */}
+        <html lang={params.locale} className="dark" suppressHydrationWarning>
             <body className={cn(`dark:bg-neutral-800`, inter.className)}>
                 <Script
                     src="/themeSwitcher.js"
                     strategy="beforeInteractive"
                 ></Script>
                 <Script src="/spaghetti.js"></Script>
-                <NextIntlClientProvider messages={messages}>
+                <NextIntlClientProvider messages={messages} locale={params.locale}>
                     <AppContextProvider user={user}>
-                    {/* Gradients */}
-                    <div className="relative overflow-x-hidden">
-                        <GradientBg />
-                        <Navbar user={user} />
-                        {children}
-                    </div>
+                        {/* Gradients */}
+                        <div className="relative overflow-x-hidden">
+                            <GradientBg />
+                            <Navbar user={user} />
+                            {children}
+                        </div>
                     </AppContextProvider>
                 </NextIntlClientProvider>
                 {process.env.NODE_ENV !== "development" ? (

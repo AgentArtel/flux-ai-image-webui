@@ -1,16 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import { navigation } from "@/lib/navigation";
-import Brand from "@/components/Brand/Logo";
-import UserMenu from "@/components/User/UserMenu";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { signOut } from "next-auth/react";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import UserDropdown from "./UserDropdown";
+import Brand from "@/components/Brand/Logo";
+import { navigation } from "@/lib/navigation";
+import { usePathname } from "next/navigation";
 import SignButtonGroup from "@/components/Nav/SignButtonGroup";
 import MobileListButton from "@/components/Nav/MobileListButton";
 import DarkModeToggle from "@/components/Nav/DarkModeToggle";
@@ -29,8 +27,8 @@ const CloseIcon = (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M18 6 6 18"></path>
-    <path d="m6 6 12 12"></path>
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
   </svg>
 );
 
@@ -53,8 +51,7 @@ const OpenListIcon = (
   </svg>
 );
 
-export default function Navbar({ user = null }: { user: any }) {
-  const [state, setState] = useState(false);
+export default function Navbar({ user }: { user?: any }) {
   const pathname = usePathname();
 
   if (pathname === "/sign-up" || pathname === "/sign-in") return null;

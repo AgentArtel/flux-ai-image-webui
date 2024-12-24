@@ -1,5 +1,5 @@
 // import UploadSection from "@/components/Upload/UploadSection";
-import { getServerAuthSession } from "@/auth";
+import { getSession } from "@/lib/supabase/server";
 // import { Upload } from "lucide-react";
 import { Toaster } from "sonner";
 import { getUserInfo } from "@/models/user";
@@ -33,13 +33,13 @@ export async function generateMetadata({ params }: any) {
     };
 }
 
-export default async function GenerationPage({
+export default async function AiImageGeneratorPage({
     params: { locale },
 }: {
     params: { locale: string };
 }) {
     let user
-    const session: any = await getServerAuthSession();
+    const session = await getSession();
     if (!session || !session.user) {
         user = null
     } else {
@@ -49,7 +49,7 @@ export default async function GenerationPage({
         console.info("userId", userId);
         // pageNo = pageNo - 1 < 0 ? 0 : pageNo - 1;
         // console.info("pageNo:", pageNo);
-        console.info("GenerationPage locale:", locale);
+        console.info("AiImageGeneratorPage locale:", locale);
     }
 
     const t = await getTranslations("Generation");

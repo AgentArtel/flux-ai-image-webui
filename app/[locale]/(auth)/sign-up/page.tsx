@@ -1,4 +1,4 @@
-import { getServerAuthSession } from "@/auth";
+import { getSession } from "@/lib/supabase/server";
 import SignUpForm from "@/components/LoginBox/SignupForm";
 import { languages, siteConfig } from "@/config/site";
 import { getTranslations } from "next-intl/server";
@@ -11,8 +11,6 @@ export async function generateMetadata({ params }: any) {
         description: t("layoutDescription"),
         icons: {
             icon: "/favicon.ico",
-            // shortcut: "/logo.png",
-            // apple: "/logo.png",
         },
         alternates: {
             canonical: `${siteConfig.url}${
@@ -29,7 +27,7 @@ export async function generateMetadata({ params }: any) {
 }
 
 export default async function SignUpPage() {
-    const session = await getServerAuthSession();
+    const session = await getSession();
     if (session) {
         redirect("/");
     }
@@ -39,7 +37,7 @@ export default async function SignUpPage() {
             <div className="w-full px-6 py-8 md:px-8">
                 <div className="flex flex-col space-y-2 text-center text-gray-800 dark:text-white">
                     <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-                        {siteConfig.name} Singup
+                        {siteConfig.name} Signup
                     </h1>
                     <p className="text-sm text-muted-foreground">
                         {siteConfig.name}

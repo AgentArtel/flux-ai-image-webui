@@ -13,6 +13,7 @@ import { Gallery } from "react-grid-gallery";
 import { getGenerationList } from "@/services/handleImage";
 import ImageGallery from "@/components/Generator/ImageGallery";
 import EmptyGallery from "@/components/Generator/EmptyGallery";
+import { getSession } from "@/lib/supabase/server";
 
 export async function generateMetadata({ params }: any) {
     const t = await getTranslations("Explore");
@@ -49,9 +50,9 @@ export async function generateMetadata({ params }: any) {
 export default async function ExplorePage({
     params: { locale, page = [1] },
 }: {
-    params: { locale: string; page: number[] };
+    params: { locale: string; page?: string[] };
 }) {
-    // const session: any = await getServerAuthSession();
+    const session = await getSession();
     // const user = session?.user;
     // const userInfo = await getUserInfo(user?.email || "");
     // const userId = userInfo?.id;

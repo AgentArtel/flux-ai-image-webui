@@ -1,4 +1,4 @@
-import { getServerAuthSession } from "@/auth";
+import { getSession } from "@/lib/supabase/server";
 import SignInForm from "@/components/LoginBox/LoginForm";
 import { languages, siteConfig } from "@/config/site";
 import { getTranslations } from "next-intl/server";
@@ -11,8 +11,6 @@ export async function generateMetadata({ params }: any) {
         description: t("layoutDescription"),
         icons: {
             icon: "/favicon.ico",
-            // shortcut: "/logo.png",
-            // apple: "/logo.png",
         },
         alternates: {
             canonical: `${siteConfig.url}${
@@ -29,7 +27,7 @@ export async function generateMetadata({ params }: any) {
 }
 
 export default async function SignInPage() {
-  const session = await getServerAuthSession();
+  const session = await getSession();
   if (session) {
     redirect("/");
   }
@@ -42,7 +40,7 @@ export default async function SignInPage() {
             {siteConfig.name} Login
           </h1>
           <p className="text-sm text-muted-foreground">
-          {siteConfig.name}
+            {siteConfig.name}
           </p>
         </div>
 

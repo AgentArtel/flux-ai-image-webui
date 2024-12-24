@@ -1,28 +1,59 @@
-import createMiddleware from "next-intl/middleware";
-import { defaultLocale, localePrefix, locales } from "@/config/site";
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import createIntlMiddleware from 'next-intl/middleware'
+import { locales, defaultLocale } from '@/config/site'
 
-export default createMiddleware({
-  // A list of all locales that are supported
-  locales: locales,
-  localePrefix: localePrefix,
-  // pathnames: pathnames,
-  // Used when no locale matches
-  defaultLocale: defaultLocale,
-});
+// First, create the next-intl middleware
+const intlMiddleware = createIntlMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'always'
+})
+
+// This function will handle the Supabase auth
+const withAuth = async (request: NextRequest, response: NextResponse) => {
+  const supabase = createMiddlewareClient({ req: request, res: response })
+  await supabase.auth.getSession()
+  return response
+}
+
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Skip middleware for static files and API routes
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next()
+  }
+
+  // Handle auth callback separately
+  if (pathname.startsWith('/auth/callback')) {
+    const res = NextResponse.next()
+    return withAuth(request, res)
+  }
+
+  // Handle root path redirect
+  if (pathname === '/') {
+    const url = new URL(`/${defaultLocale}`, request.url)
+    return NextResponse.redirect(url)
+  }
+
+  // For all other routes, first handle i18n then auth
+  const response = await intlMiddleware(request)
+  return withAuth(request, response)
+}
 
 export const config = {
   matcher: [
-    // Enable a redirect to a matching locale at the root
-    // "/",
-
-    // Set a cookie to remember the previous locale for
-    // all requests that have a locale prefix
-    // '/(de|en)/:path*',
-
-    // Enable redirects that add missing locales
-    // (e.g. `/pathnames` -> `/en/pathnames`)
-    // "/((?!_next|_vercel|.*\\..*).*)",
-
-    "/((?!api|_next|.*\\..*).*)",
-  ],
-};
+    // Match all pathnames except for
+    // - /api, /_next, /_vercel
+    // - .*\\..*$ (files)
+    '/((?!api|_next|_vercel|.*\\..*$).*)',
+    // Also match root path
+    '/'
+  ]
+}

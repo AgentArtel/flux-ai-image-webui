@@ -14,6 +14,7 @@ import CarouselSection from "@/components/Carousel/CarouselSection";
 import { languages, siteConfig } from "@/config/site";
 import { getHomeGallery } from "@/services/handleImage";
 import to from "await-to-js";
+import { getSession } from "@/lib/supabase/server";
 
 export async function generateMetadata({ params }: any) {
     const t = await getTranslations("Home");
@@ -40,8 +41,12 @@ export async function generateMetadata({ params }: any) {
     };
 }
 
-export default async function Home() {
-    // const session: any = await getServerAuthSession();
+export default async function HomePage({
+    params: { locale },
+}: {
+    params: { locale: string };
+}) {
+    const session = await getSession();
     // const t = await getTranslations('Home');
     const [err, res] = await to(
         getHomeGallery([

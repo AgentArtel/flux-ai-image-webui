@@ -20,6 +20,7 @@ import ImageDetails from "@/components/Details/ImageDetails";
 import { useContext } from "react";
 import to from "await-to-js";
 import { ChevronRight } from "lucide-react";
+import { getSession } from "@/lib/supabase/server";
 
 export async function generateMetadata({ params: { locale, imgId = [""] } }: {params: { locale: string; imgId: string[] }}) {
     const t = await getTranslations("Details");
@@ -70,6 +71,8 @@ export default async function ImageDetailsPage({
     console.info("ImageDetailsPage locale:", locale);
     const t = await getTranslations("Details");
 
+    const session = await getSession();
+
     const [generationErr, generation] = await to(getGenerationItem(imgId[0]));
 
     if (generationErr) {
@@ -90,7 +93,7 @@ export default async function ImageDetailsPage({
                 <ol className="flex items-center whitespace-nowrap">
                     <li className="inline-flex items-center">
                         <a
-                            className="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500"
+                            className="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-600"
                             href="/"
                             title="Flux Image AI Generator"
                         >
@@ -100,7 +103,7 @@ export default async function ImageDetailsPage({
                     </li>
                     <li className="inline-flex items-center">
                         <a
-                            className="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-500"
+                            className="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-500 dark:hover:text-blue-500 dark:focus:text-blue-600"
                             href="/explore-image"
                             title="Explore Flux Image"
                         >

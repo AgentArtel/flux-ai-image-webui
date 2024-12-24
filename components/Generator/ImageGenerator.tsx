@@ -95,31 +95,39 @@ const ImageGenerator = ({ user, generated }: any) => {
 
     // handle Generative
     const handleGenerative = async () => {
-        // 用户登录检测
+        // Check if user is logged in
         if (!user) {
-            // console.info("Run out of free", outOfFree());
             setOpenLogin(true);
             return false;
         }
-        // 表单基础必填项检测
+
+        // Check for required prompt
         if (!textPrompts) {
             toast.error("Please enter the prompt word!");
             return;
         }
-        // 积分余额检测（服务端）
 
         setGenerating(true);
         try {
-            // todo: -----
-            await handleSubmit({
-                prompts: textPrompts,
-                ratio: aspectRatio.find((item) => item.checked)?.ratio,
-                model: model.find((item) => item.selected)?.value,
+            const selectedRatio = aspectRatio.find((item) => item.checked)?.ratio || "1:1";
+            const [width, height] = selectedRatio.split(":").map(n => parseInt(n) * 512);
+            
+            const result = await handleSubmit({
+                prompt: textPrompts,
+                width,
+                height,
+                model: model.find((item) => item.selected)?.value || "schnell",
                 isPublic,
-                user,
+                steps: 20
             });
+
+            if (result.imageUrl) {
+                setGeneration({ url: result.imageUrl });
+            }
+            
             setGenerating(false);
         } catch (error: any) {
+            console.error("Generation error:", error);
             setGenerating(false);
         }
     };

@@ -4,18 +4,21 @@ import { toast } from "sonner";
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+interface GenerationParams {
+    prompt: string;
+    negativePrompt?: string;
+    steps?: number;
+    width?: number;
+    height?: number;
+    model?: string;
+    isPublic?: boolean;
+}
+
 export function usePrediction() {
     const [generation, setGeneration] = useState<any>(null);
     const [prediction, setPrediction] = useState<any>(null);
     const [generatedList, setGeneratedList] = useState<any[]>([]);
     const [error, setError] = useState<any>(null);
-
-    // useEffect(() => {
-    //   console.log("-----------------------------------------")
-    //   console.log("prediction:", prediction)
-    //   console.log("error:", error)
-    //   console.log("-----------------------------------------")
-    // }, [prediction, error])
 
     function resetState() {
         setPrediction(null);
@@ -23,81 +26,68 @@ export function usePrediction() {
         setGeneratedList([]);
     }
 
-    const handleSubmit = async (params: any) => {
+    const handleSubmit = async (params: GenerationParams) => {
         resetState();
-        const [err, response1] = await to(
-            fetch("/api/predictions", {
+        
+        // Calculate dimensions based on aspect ratio
+        let width = 512;
+        let height = 512;
+        
+        if (params.width && params.height) {
+            width = params.width;
+            height = params.height;
+        }
+
+        const [err, response] = await to(
+            fetch("/api/generate", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    ...params,
+                    prompt: params.prompt,
+                    negativePrompt: params.negativePrompt || "",
+                    steps: params.steps || 20,
+                    width,
+                    height,
+                    model: params.model || "schnell",
+                    isPublic: params.isPublic
                 }),
             })
         );
 
         if (err) {
-            console.error("fetch predictions error", err.message);
+            console.error("Generation error:", err.message);
             toast.error(err.message);
+            setError(err.message);
             return Promise.reject({ message: err.message });
         }
-        let prediction = await response1.json();
-        const pid = prediction.dataId;
 
-        if (response1.status !== 201) {
-            toast.error(prediction.detail);
-            setError(prediction.detail);
-            return Promise.reject({ message: prediction.detail });
+        if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.error || "Failed to generate image";
+            toast.error(errorMessage);
+            setError(errorMessage);
+            return Promise.reject({ message: errorMessage });
         }
 
-        setPrediction(prediction);
-
-        while (
-            prediction.status !== "succeeded" &&
-            prediction.status !== "failed"
-        ) {
-            await sleep(5000);
-            const response2 = await fetch(
-                "/api/predictions/" + prediction.id + `?pid=${pid}`,
-                { cache: "no-store" }
-            );
-            prediction = await response2.json();
-            if (response2.status !== 200) {
-                toast.error(prediction.detail);
-                setError(prediction.detail);
-                return Promise.reject({ message: prediction.detail });
-            }
-            // console.log({ prediction });
-            console.log("loading...");
-
-            if (prediction.output) {
-                setGeneration({ url: typeof prediction.output === "string" ? prediction.output : prediction?.output[0] });
-                return Promise.resolve(typeof prediction.output === "string" ? prediction.output : prediction?.output[0]);
-            }
-            setPrediction(prediction);
+        const result = await response.json();
+        setPrediction(result);
+        
+        if (result.error) {
+            toast.error(result.error);
+            setError(result.error);
+            return Promise.reject({ message: result.error });
         }
 
-        // --------- mock start ---------
-        // await sleep(2000);
-        // const prediction = {
-        //   output: ["https://replicate.delivery/pbxt/yQkczwuNdb5fZ6P5MBb6ujhkZwgaefDGEAmYHDEse20T8z4MB/R8_LivePortrait_00001.mp4"],
-        // };
-
-        // setPrediction({
-        //   output: prediction?.output,
-        // });
-        // setGeneratedList([prediction?.output[0], ...generatedList])
-        // console.info("handleStorage", prediction?.output[0])
-        // --------- mock end ---------
+        return result;
     };
 
     return {
-        prediction,
         error,
-        generatedList,
-        setGeneratedList,
+        prediction,
         generation,
+        generatedList,
         handleSubmit,
     };
 }
